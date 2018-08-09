@@ -4,19 +4,29 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"github.com/go-kit/kit/log"
 )
 
-// InfoService provides an API that hurts
+// InfoResponse defines response structure
+type InfoResponse struct {
+	IPAddress    string    `json:"ipAddress"`
+	SourceCommit string    `json:"sourceCommit"`
+	Starttime    time.Time `json:"starttime"`
+	Runtime      string    `json:"runtime"`
+}
+
+// InfoService provides information about service
 type InfoService interface {
 	Health() error
-	Info() (string, error)
+	Info() (*InfoResponse, error)
 }
 
 // infoService is a concrete implementation of InfoService
 type infoService struct {
-	logger log.Logger
+	logger    log.Logger
+	startTime time.Time
 }
 
 // NewInfoService creates a new instance of InfoService
@@ -26,7 +36,8 @@ func NewInfoService() InfoService {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
 	svc := &infoService{
-		logger: logger,
+		logger:    logger,
+		startTime: time.Now(),
 	}
 	return svc
 }
@@ -35,19 +46,25 @@ func (s *infoService) Health() error {
 	return nil
 }
 
-func (s *infoService) Info() (string, error) {
+func (s *infoService) Info() (*InfoResponse, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+	resp := &InfoResponse{
+		SourceCommit: os.Getenv("SOURCE_COMMIT"),
+		Starttime:    s.startTime,
+		Runtime:      time.Now().Sub(s.startTime).String(),
 	}
 	for _, address := range addrs {
 		// check the address type and if it is not a loopback the display it
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String(), nil
+				resp.IPAddress = ipnet.IP.String()
+				return resp, nil
 			}
 		}
 	}
 
-	return "", fmt.Errorf("Unable to find ip address")
+	return nil, fmt.Errorf("Unable to find ip address")
 }

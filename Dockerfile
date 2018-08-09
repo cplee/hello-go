@@ -24,3 +24,5 @@ COPY --from=healthcheck /go/src/stelligent/hello-go/healthcheck /
 ENTRYPOINT [ "/main"] 
 HEALTHCHECK --interval=10s --timeout=3s CMD ["/healthcheck"]
 EXPOSE 8080
+ARG SOURCE_COMMIT
+ENV SOURCE_COMMIT=$SOURCE_COMMIT
