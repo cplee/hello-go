@@ -10,30 +10,30 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
-type helloResponse struct {
-	Value string `json:"value"`
+type infoResponse struct {
+	IPAddress string `json:"value"`
 }
 
-func makeHealthEndpoint(svc HelloService) endpoint.Endpoint {
+func makeHealthEndpoint(svc InfoService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		err := svc.Health()
 		return nil, err
 	}
 }
 
-func makeHealthHandler(svc HelloService) *httptransport.Server {
+func makeHealthHandler(svc InfoService) *httptransport.Server {
 	return httptransport.NewServer(makeHealthEndpoint(svc), decodeRequest, encodeResponse)
 }
 
-func makeHelloEndpoint(svc HelloService) endpoint.Endpoint {
+func makeInfoEndpoint(svc InfoService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		v, err := svc.Hello()
-		return &helloResponse{Value: v}, err
+		v, err := svc.Info()
+		return &infoResponse{IPAddress: v}, err
 	}
 }
 
-func makeHelloHandler(svc HelloService) *httptransport.Server {
-	return httptransport.NewServer(makeHelloEndpoint(svc), decodeRequest, encodeResponse)
+func makeInfoHandler(svc InfoService) *httptransport.Server {
+	return httptransport.NewServer(makeInfoEndpoint(svc), decodeRequest, encodeResponse)
 }
 
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {

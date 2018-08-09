@@ -4,44 +4,50 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 
 	"github.com/go-kit/kit/log"
 )
 
-// HelloService provides an API that hurts
-type HelloService interface {
+// InfoService provides an API that hurts
+type InfoService interface {
 	Health() error
-	Hello() (string, error)
+	Info() (string, error)
 }
 
-// hellowService is a concrete implementation of HelloService
-type helloService struct {
+// infoService is a concrete implementation of InfoService
+type infoService struct {
 	logger log.Logger
-	domain string
 }
 
-// NewHelloService creates a new instance of HelloService
-func NewHelloService(domain string) HelloService {
+// NewInfoService creates a new instance of InfoService
+func NewInfoService() InfoService {
 	var logger log.Logger
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
-	svc := &helloService{
+	svc := &infoService{
 		logger: logger,
-		domain: domain,
 	}
 	return svc
 }
 
-func (s *helloService) Health() error {
+func (s *infoService) Health() error {
 	return nil
 }
 
-func (s *helloService) Hello() (string, error) {
-	addrs, err := net.LookupHost(fmt.Sprintf("%s.%s", "hello-go", s.domain))
+func (s *infoService) Info() (string, error) {
+	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "", err
 	}
-	return strings.Join(addrs, ","), nil
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String(), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("Unable to find ip address")
 }
