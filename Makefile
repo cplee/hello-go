@@ -1,19 +1,21 @@
-SOURCE_COMMIT := $(shell git rev-parse HEAD)
+SOURCE_COMMIT ?= $(shell git rev-parse HEAD)
+NAME ?= $(notdir $(CURDIR))
+PORT ?= 8080
 
 build:
 	@echo $(SOURCE_COMMIT)
-	@docker build -t hello-go:latest --build-arg SOURCE_COMMIT=$(SOURCE_COMMIT) .
+	@docker build -t $(NAME):latest --build-arg SOURCE_COMMIT=$(SOURCE_COMMIT) .
 	
 test:
-	-@docker rm -f hello-go-test
-	@docker run -d --name hello-go-test hello-go:latest
-	@while docker inspect -f "{{.State.Health.Status}}" hello-go-test | grep starting; do sleep 1; done
-	@docker inspect -f "{{.State.Health.Status}}" hello-go-test | grep "^healthy$$"
-	-@docker rm -f hello-go-test
+	-@docker rm -f $(NAME)
+	@docker run -d --name $(NAME) $(NAME):latest
+	@while docker inspect -f "{{.State.Health.Status}}" $(NAME) | grep starting; do sleep 1; done
+	@docker inspect -f "{{.State.Health.Status}}" $(NAME) | grep "^healthy$$"
+	-@docker rm -f $(NAME)
 	
 run: 
-	-@docker rm -f hello-go > /dev/null 2>&1
-	@docker run -p 8080:8080 -d --name hello-go hello-go:latest
-	@curl http://localhost:8080 
-	@docker logs -f hello-go
+	-@docker rm -f $(NAME) > /dev/null 2>&1
+	@docker run -p $(PORT):$(PORT) -d --name $(NAME) $(NAME):latest
+	@curl http://localhost:$(PORT) 
+	@docker logs -f $(NAME)
 	
