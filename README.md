@@ -10,5 +10,6 @@ curl -s https://getmu.io/install.sh | sh
 
 # Create the pipeline
 ```
+mu init -e
 mu pipeline up
 ```
