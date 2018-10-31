@@ -10,14 +10,9 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
-type infoResponse struct {
-	IPAddress string `json:"value"`
-}
-
 func makeHealthEndpoint(svc InfoService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		err := svc.Health()
-		return nil, err
+		return nil, svc.Health()
 	}
 }
 
@@ -27,8 +22,7 @@ func makeHealthHandler(svc InfoService) *httptransport.Server {
 
 func makeInfoEndpoint(svc InfoService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		v, err := svc.Info()
-		return &infoResponse{IPAddress: v}, err
+		return svc.Info()
 	}
 }
 
